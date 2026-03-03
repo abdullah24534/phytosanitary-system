@@ -1,7 +1,7 @@
 base_dir = "/mnt/kimi/output/phytosanitary-system"
 
-# 7. js/auth.js - نظام المصادقة
-auth_js = '''// نظام المصادقة والتسجيل
+# إصلاح ملف auth.js - المشكلة في checkAuth()
+auth_js_fixed = '''// نظام المصادقة والتسجيل
 const AUTH_KEY = 'phytosanitary_auth';
 const USERS_KEY = 'phytosanitary_users';
 
@@ -39,13 +39,23 @@ function login(username, password) {
     return { success: false, message: 'اسم المستخدم أو كلمة المرور غير صحيحة' };
 }
 
-// التحقق من تسجيل الدخول
+// التحقق من تسجيل الدخول - إصلاح المشكلة هنا
 function checkAuth() {
     const auth = localStorage.getItem(AUTH_KEY);
+    
+    // إذا كنا في صفحة تسجيل الدخول، لا نفعل شيئاً
+    if (window.location.pathname.includes('index.html') || 
+        window.location.pathname === '/' ||
+        window.location.pathname.endsWith('/')) {
+        return false;
+    }
+    
+    // إذا لم يكن هناك تسجيل دخول، نحول للصفحة الرئيسية
     if (!auth) {
         window.location.href = 'index.html';
         return false;
     }
+    
     return JSON.parse(auth);
 }
 
@@ -57,11 +67,12 @@ function logout() {
 
 // عرض اسم المستخدم
 function displayUser() {
-    const auth = checkAuth();
+    const auth = localStorage.getItem(AUTH_KEY);
     if (auth) {
+        const user = JSON.parse(auth);
         const usernameEl = document.getElementById('usernameDisplay');
         if (usernameEl) {
-            usernameEl.textContent = auth.name;
+            usernameEl.textContent = user.name;
         }
     }
 }
@@ -95,9 +106,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = login(username, password);
             
             if (result.success) {
-                errorEl.textContent = '';
-                errorEl.style.color = 'green';
                 errorEl.textContent = 'جاري تسجيل الدخول...';
+                errorEl.style.color = 'green';
+                
+                // الانتقال للوحة التحكم بعد نجاح الدخول
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 500);
@@ -109,12 +121,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // التحقق من الصلاحيات في الصفحات المحمية
-    if (window.location.pathname.includes('dashboard.html') || 
-        window.location.pathname.includes('certificate.html') ||
-        window.location.pathname.includes('certificates-list.html') ||
-        window.location.pathname.includes('reports.html')) {
-        checkAuth();
-        displayUser();
+    const protectedPages = ['dashboard.html', 'certificate.html', 'certificates-list.html', 'reports.html', 'view.html'];
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    if (protectedPages.includes(currentPage)) {
+        const auth = localStorage.getItem(AUTH_KEY);
+        if (!auth) {
+            window.location.href = 'index.html';
+        } else {
+            displayUser();
+        }
     }
     
     // عرض التاريخ الحالي
