@@ -1,0 +1,124 @@
+base_dir = "/mnt/kimi/output/phytosanitary-system"
+
+# 4. certificates-list.html - قائمة الشهادات
+cert_list_html = '''<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قائمة الشهادات</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://kimi-web-img.moonshot.cn/img/www.mol.om/0156f953351832c8840e4ab16f306f311cf29e02.aspx" alt="Logo" class="sidebar-logo">
+                <h3>وزارة الثروة الزراعية</h3>
+                <p>محافظة البريمي</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span>الرئيسية</span>
+                </a>
+                <a href="certificate.html" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span>إنشاء شهادة</span>
+                </a>
+                <a href="certificates-list.html" class="nav-item active">
+                    <span class="nav-icon">📋</span>
+                    <span>قائمة الشهادات</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span>التقارير</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span>تسجيل الخروج</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-right">
+                    <h1>قائمة الشهادات الصحية النباتية</h1>
+                </div>
+                <div class="header-left">
+                    <button class="btn-primary" onclick="window.location.href='certificate.html'">+ شهادة جديدة</button>
+                </div>
+            </header>
+
+            <div class="list-content">
+                <!-- Filters -->
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <input type="text" id="searchInput" placeholder="بحث برقم الشهادة أو المصدر...">
+                        <select id="filterCountry">
+                            <option value="">جميع الدول</option>
+                            <option value="الإمارات">الإمارات</option>
+                            <option value="السعودية">السعودية</option>
+                            <option value="قطر">قطر</option>
+                            <option value="الكويت">الكويت</option>
+                        </select>
+                        <input type="date" id="filterDateFrom" placeholder="من تاريخ">
+                        <input type="date" id="filterDateTo" placeholder="إلى تاريخ">
+                        <button onclick="applyFilters()">🔍 بحث</button>
+                        <button onclick="resetFilters()">إعادة تعيين</button>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table id="certificatesTable">
+                        <thead>
+                            <tr>
+                                <th>رقم الشهادة</th>
+                                <th>التاريخ</th>
+                                <th>المصدر</th>
+                                <th>المستورد</th>
+                                <th>الدولة</th>
+                                <th>عدد المنتجات</th>
+                                <th>الحالة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="certificatesBody">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <button onclick="prevPage()">السابق</button>
+                    <span id="pageInfo">صفحة 1 من 1</span>
+                    <button onclick="nextPage()">التالي</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- View Modal -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeViewModal()">&times;</span>
+            <div id="viewContent"></div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/certificates-list.js"></script>
+</body>
+</html>'''
+
+with open(f"{base_dir}/certificates-list.html", "w", encoding="utf-8") as f:
+    f.write(cert_list_html)
+
+print("✅ تم إنشاء certificates-list.html")

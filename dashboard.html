@@ -1,0 +1,179 @@
+base_dir = "/mnt/kimi/output/phytosanitary-system"
+
+# 2. dashboard.html - لوحة التحكم الرئيسية
+dashboard_html = '''<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - نظام الشهادات الصحية النباتية</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://kimi-web-img.moonshot.cn/img/www.mol.om/0156f953351832c8840e4ab16f306f311cf29e02.aspx" alt="Logo" class="sidebar-logo">
+                <h3>وزارة الثروة الزراعية</h3>
+                <p>محافظة البريمي</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span>الرئيسية</span>
+                </a>
+                <a href="certificate.html" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span>إنشاء شهادة</span>
+                </a>
+                <a href="certificates-list.html" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span>قائمة الشهادات</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span>التقارير</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span>تسجيل الخروج</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-right">
+                    <h1>نظام إدارة الشهادات الصحية النباتية</h1>
+                    <p id="currentDate"></p>
+                </div>
+                <div class="header-left">
+                    <div class="user-info">
+                        <span id="usernameDisplay"></span>
+                        <span class="user-role">مدير النظام</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e3f2fd; color: #1976d2;">📄</div>
+                        <div class="stat-info">
+                            <h3 id="totalCerts">0</h3>
+                            <p>إجمالي الشهادات</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e8f5e9; color: #388e3c;">📅</div>
+                        <div class="stat-info">
+                            <h3 id="todayCerts">0</h3>
+                            <p>شهادات اليوم</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fff3e0; color: #f57c00;">📆</div>
+                        <div class="stat-info">
+                            <h3 id="monthCerts">0</h3>
+                            <p>شهادات الشهر</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fce4ec; color: #c2185b;">🌍</div>
+                        <div class="stat-info">
+                            <h3 id="totalCountries">0</h3>
+                            <p>الدول المستوردة</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2>إجراءات سريعة</h2>
+                    <div class="actions-grid">
+                        <a href="certificate.html" class="action-card">
+                            <span class="action-icon">➕</span>
+                            <span>شهادة جديدة</span>
+                        </a>
+                        <a href="certificates-list.html" class="action-card">
+                            <span class="action-icon">🔍</span>
+                            <span>بحث في الشهادات</span>
+                        </a>
+                        <a href="reports.html" class="action-card">
+                            <span class="action-icon">📊</span>
+                            <span>عرض التقارير</span>
+                        </a>
+                        <a href="#" class="action-card" onclick="verifyCertificate()">
+                            <span class="action-icon">✅</span>
+                            <span>التحقق من شهادة</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Recent Certificates -->
+                <div class="recent-section">
+                    <h2>آخر الشهادات الصادرة</h2>
+                    <div class="table-container">
+                        <table id="recentTable">
+                            <thead>
+                                <tr>
+                                    <th>رقم الشهادة</th>
+                                    <th>التاريخ</th>
+                                    <th>المصدر</th>
+                                    <th>المستورد</th>
+                                    <th>الدولة</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>إحصائيات الشهادات الشهرية</h3>
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>أكثر الدول استيراداً</h3>
+                        <canvas id="countriesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Verification Modal -->
+    <div id="verifyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeVerifyModal()">&times;</span>
+            <h2>التحقق من صحة الشهادة</h2>
+            <div class="verify-form">
+                <input type="text" id="verifySerial" placeholder="أدخل رقم الشهادة (Serial No.)" maxlength="10">
+                <input type="text" id="verifyCode" placeholder="أدخل كود التحقق (Verification Code)" maxlength="6">
+                <button onclick="performVerification()">تحقق</button>
+            </div>
+            <div id="verifyResult"></div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>'''
+
+with open(f"{base_dir}/dashboard.html", "w", encoding="utf-8") as f:
+    f.write(dashboard_html)
+
+print("✅ تم إنشاء dashboard.html")

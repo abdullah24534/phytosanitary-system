@@ -1,0 +1,331 @@
+base_dir = "/mnt/kimi/output/phytosanitary-system"
+
+# 3. certificate.html - إنشاء وتعديل الشهادة
+certificate_html = '''<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء شهادة صحية نباتية</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://kimi-web-img.moonshot.cn/img/www.mol.om/0156f953351832c8840e4ab16f306f311cf29e02.aspx" alt="Logo" class="sidebar-logo">
+                <h3>وزارة الثروة الزراعية</h3>
+                <p>محافظة البريمي</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span>الرئيسية</span>
+                </a>
+                <a href="certificate.html" class="nav-item active">
+                    <span class="nav-icon">📝</span>
+                    <span>إنشاء شهادة</span>
+                </a>
+                <a href="certificates-list.html" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span>قائمة الشهادات</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span>التقارير</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span>تسجيل الخروج</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-right">
+                    <h1>إنشاء شهادة صحية نباتية جديدة</h1>
+                </div>
+                <div class="header-left">
+                    <button class="btn-secondary" onclick="window.location.href='certificates-list.html'">العودة للقائمة</button>
+                </div>
+            </header>
+
+            <div class="certificate-workspace">
+                <!-- Form Section -->
+                <div class="form-section">
+                    <form id="certificateForm" class="cert-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>رقم الشهادة (Serial No.) <span class="auto-generated">* توليد تلقائي</span></label>
+                                <input type="text" id="serialNo" readonly class="readonly-input">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>كود التحقق (Verification Code) <span class="auto-generated">* توليد تلقائي</span></label>
+                                <input type="text" id="verifyCode" readonly class="readonly-input">
+                            </div>
+
+                            <div class="form-group">
+                                <label>اسم المصدر (Exporter)</label>
+                                <input type="text" id="exporterName" required placeholder="اسم الشركة المصدرة">
+                            </div>
+
+                            <div class="form-group">
+                                <label>عنوان المصدر</label>
+                                <input type="text" id="exporterAddress" required placeholder="العنوان الكامل">
+                            </div>
+
+                            <div class="form-group">
+                                <label>اسم المستورد (Importer)</label>
+                                <input type="text" id="importerName" required placeholder="اسم الشركة المستوردة">
+                            </div>
+
+                            <div class="form-group">
+                                <label>عنوان المستورد</label>
+                                <input type="text" id="importerAddress" required placeholder="العنوان الكامل">
+                            </div>
+
+                            <div class="form-group">
+                                <label>الدولة المستوردة</label>
+                                <select id="country" required>
+                                    <option value="">اختر الدولة</option>
+                                    <option value="الإمارات">الإمارات العربية المتحدة</option>
+                                    <option value="السعودية">المملكة العربية السعودية</option>
+                                    <option value="قطر">دولة قطر</option>
+                                    <option value="الكويت">دولة الكويت</option>
+                                    <option value="البحرين">مملكة البحرين</option>
+                                    <option value="اليمن">الجمهورية اليمنية</option>
+                                    <option value="العراق">جمهورية العراق</option>
+                                    <option value="الأردن">المملكة الأردنية الهاشمية</option>
+                                    <option value="مصر">جمهورية مصر العربية</option>
+                                    <option value="أخرى">دولة أخرى</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>نقطة الدخول</label>
+                                <input type="text" id="entryPoint" required placeholder="منفذ حدبي / ميناء">
+                            </div>
+
+                            <div class="form-group">
+                                <label>بلد المنشأ</label>
+                                <input type="text" id="originCountry" value="سلطنة عمان" readonly class="readonly-input">
+                            </div>
+
+                            <div class="form-group">
+                                <label>الغرض / الاستخدام النهائي</label>
+                                <select id="purpose" required>
+                                    <option value="">اختر الغرض</option>
+                                    <option value="استهلاك بشري">استهلاك بشري</option>
+                                    <option value="زراعة">زراعة</option>
+                                    <option value="تصنيع">تصنيع</option>
+                                    <option value="تصدير">إعادة تصدير</option>
+                                    <option value="أخرى">أغراض أخرى</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>وسيلة النقل</label>
+                                <select id="conveyance" required>
+                                    <option value="">اختر الوسيلة</option>
+                                    <option value="شاحنة">شاحنة برية</option>
+                                    <option value="حاوية">حاوية بحرية</option>
+                                    <option value="طائرة">نقل جوي</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Products Table -->
+                        <div class="products-section">
+                            <h3>المنتجات</h3>
+                            <table id="productsTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>اسم السلعة</th>
+                                        <th>الفئة</th>
+                                        <th>الكمية</th>
+                                        <th>عدد الطرود</th>
+                                        <th>إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsBody">
+                                    <tr>
+                                        <td>1</td>
+                                        <td><input type="text" class="product-name" placeholder="مثال:طماطم" required></td>
+                                        <td><input type="text" class="product-class" placeholder="مثال:خضروات" required></td>
+                                        <td><input type="text" class="product-qty" placeholder="مثال:1000 كجم" required></td>
+                                        <td><input type="number" class="product-packages" placeholder="50" required></td>
+                                        <td><button type="button" class="btn-remove" onclick="removeProduct(this)">❌</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn-add" onclick="addProduct()">+ إضافة منتج</button>
+                        </div>
+
+                        <!-- Additional Declaration -->
+                        <div class="declaration-section">
+                            <h3>إقرار إضافي (Additional Declaration)</h3>
+                            <textarea id="additionalDecl" rows="4" placeholder="أي معلومات إضافية..."></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-preview" onclick="previewCertificate()">👁️ معاينة</button>
+                            <button type="button" class="btn-save" onclick="saveCertificate()">💾 حفظ</button>
+                            <button type="button" class="btn-print" onclick="printCertificate()">🖨️ طباعة</button>
+                            <button type="button" class="btn-pdf" onclick="exportPDF()">📄 تصدير PDF</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Preview Section -->
+                <div class="preview-section" id="previewSection">
+                    <h3>معاينة الشهادة</h3>
+                    <div class="certificate-preview" id="certificatePreview">
+                        <!-- Certificate Template -->
+                        <div class="cert-template" id="certTemplate">
+                            <div class="cert-header">
+                                <div class="cert-logos">
+                                    <img src="https://kimi-web-img.moonshot.cn/img/www.mol.om/0156f953351832c8840e4ab16f306f311cf29e02.aspx" alt="Logo" class="cert-logo">
+                                </div>
+                                <div class="cert-titles">
+                                    <h2 class="ministry-name">وزارة الثروة الزراعية والسمكية وموارد المياه</h2>
+                                    <h3 class="directorate">المديرية العامة - محافظة البريمي</h3>
+                                    <h4 class="cert-title">شهادة الصحة النباتية</h4>
+                                    <p class="cert-title-en">PHYTOSANITARY CERTIFICATE</p>
+                                </div>
+                            </div>
+
+                            <div class="cert-numbers">
+                                <div class="number-box">
+                                    <span class="label">رقم الشهادة / Serial No.:</span>
+                                    <span class="value" id="previewSerial"></span>
+                                </div>
+                                <div class="number-box">
+                                    <span class="label">كود التحقق / Verification Code:</span>
+                                    <span class="value" id="previewVerify"></span>
+                                </div>
+                            </div>
+
+                            <div class="cert-body">
+                                <div class="cert-section">
+                                    <h4>1. وصف الشحنة / Description of Consignment</h4>
+                                    <div class="info-grid">
+                                        <div class="info-row">
+                                            <span class="label">إلى منظمة حماية النبات في:</span>
+                                            <span class="value" id="previewCountry"></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="label">من منظمة حماية النبات في:</span>
+                                            <span class="value">سلطنة عمان - محافظة البريمي</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="label">اسم وعنوان المستورد:</span>
+                                            <span class="value" id="previewImporter"></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="label">اسم وعنوان المصدر:</span>
+                                            <span class="value" id="previewExporter"></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="label">نقطة الدخول المعلنة:</span>
+                                            <span class="value" id="previewEntry"></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="label">بلد المنشأ:</span>
+                                            <span class="value" id="previewOrigin"></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="label">الغرض / الاستخدام النهائي:</span>
+                                            <span class="value" id="previewPurpose"></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="label">وسيلة النقل المعلنة:</span>
+                                            <span class="value" id="previewConveyance"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="cert-section">
+                                    <h4>2. وصف المنتجات / Commodity Details</h4>
+                                    <table class="products-table">
+                                        <thead>
+                                            <tr>
+                                                <th>م</th>
+                                                <th>اسم السلعة</th>
+                                                <th>الفئة</th>
+                                                <th>الكمية</th>
+                                                <th>عدد الطرود</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="previewProducts">
+                                        </tbody>
+                                    </table>
+                                    <div class="totals">
+                                        <span>إجمالي الطرود: <strong id="previewTotalPackages">0</strong></span>
+                                        <span>إجمالي الكمية: <strong id="previewTotalQty">0</strong></span>
+                                    </div>
+                                </div>
+
+                                <div class="cert-section">
+                                    <h4>3. التصريح الرسمي / Official Statement</h4>
+                                    <p class="cert-statement">
+                                        تشهد وزارة الثروة الزراعية والسمكية وموارد المياه بأن النباتات والمنتجات النباتية أو المواد المنظمة الأخرى الموضحة أعلاه قد تم فحصها و/أو اختبارها وفقاً للإجراءات الرسمية المناسبة وتعتبر خالية من الآفات الحجرية الزراعية المحددة من قبل طرف العقد المستورد ومطابقة لمتطلبات الصحة النباتية الحالية.
+                                    </p>
+                                    <p class="cert-statement-en">
+                                        This is to certify that the plants, plant products or other regulated articles described herein have been inspected and/or tested according to appropriate official procedures and are considered to be free from the quarantine pests specified by the importing contracting party and to conform with the current phytosanitary requirements.
+                                    </p>
+                                </div>
+
+                                <div class="cert-section" id="previewDeclSection" style="display:none;">
+                                    <h4>4. إقرار إضافي / Additional Declaration</h4>
+                                    <p id="previewDecl"></p>
+                                </div>
+                            </div>
+
+                            <div class="cert-footer">
+                                <div class="qr-section">
+                                    <div id="qrcode"></div>
+                                    <p>امسح للتحقق</p>
+                                </div>
+                                <div class="signature-section">
+                                    <div class="signature-line">
+                                        <span>التوقيع:</span>
+                                        <div class="signature-box"></div>
+                                    </div>
+                                    <div class="date-line">
+                                        <span>التاريخ:</span>
+                                        <span id="previewDate"></span>
+                                    </div>
+                                    <div class="stamp-area">
+                                        <div class="official-stamp">ختم رسمي</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cert-watermark">
+                                وزارة الثروة الزراعية والسمكية وموارد المياه - سلطنة عمان
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/certificates.js"></script>
+</body>
+</html>'''
+
+with open(f"{base_dir}/certificate.html", "w", encoding="utf-8") as f:
+    f.write(certificate_html)
+
+print("✅ تم إنشاء certificate.html")

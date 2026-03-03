@@ -1,0 +1,242 @@
+base_dir = "/mnt/kimi/output/phytosanitary-system"
+
+# 12. view.html - عرض الشهادة الفردية
+view_html = '''<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض الشهادة</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="view-page">
+    <div class="view-container">
+        <div class="view-header">
+            <button onclick="window.location.href='certificates-list.html'" class="btn-secondary">⬅️ العودة</button>
+            <h1>عرض الشهادة</h1>
+            <div class="view-actions">
+                <button onclick="printCertificate()" class="btn-print">🖨️ طباعة</button>
+                <button onclick="exportPDF()" class="btn-pdf">📄 PDF</button>
+            </div>
+        </div>
+        
+        <div class="certificate-display" id="certificateDisplay">
+            <!-- سيتم ملؤها بالبيانات -->
+        </div>
+    </div>
+
+    <script>
+        const CERTS_KEY = 'phytosanitary_certificates';
+        
+        // الحصول على ID من URL
+        function getCertId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+        
+        // عرض الشهادة
+        function displayCertificate() {
+            const id = getCertId();
+            if (!id) {
+                document.getElementById('certificateDisplay').innerHTML = '<p style="text-align:center; padding:50px;">رقم الشهادة غير صحيح</p>';
+                return;
+            }
+            
+            const certs = JSON.parse(localStorage.getItem(CERTS_KEY) || '[]');
+            const cert = certs.find(c => c.id == id);
+            
+            if (!cert) {
+                document.getElementById('certificateDisplay').innerHTML = '<p style="text-align:center; padding:50px;">الشهادة غير موجودة</p>';
+                return;
+            }
+            
+            const totalPackages = cert.products.reduce((sum, p) => sum + (parseInt(p.packages) || 0), 0);
+            
+            document.getElementById('certificateDisplay').innerHTML = `
+                <div class="cert-template" id="certTemplate">
+                    <div class="cert-header">
+                        <div class="cert-logos">
+                            <img src="https://kimi-web-img.moonshot.cn/img/www.mol.om/0156f953351832c8840e4ab16f306f311cf29e02.aspx" alt="Logo" class="cert-logo">
+                        </div>
+                        <div class="cert-titles">
+                            <h2 class="ministry-name">وزارة الثروة الزراعية والسمكية وموارد المياه</h2>
+                            <h3 class="directorate">المديرية العامة - محافظة البريمي</h3>
+                            <h4 class="cert-title">شهادة الصحة النباتية</h4>
+                            <p class="cert-title-en">PHYTOSANITARY CERTIFICATE</p>
+                        </div>
+                    </div>
+
+                    <div class="cert-numbers">
+                        <div class="number-box">
+                            <span class="label">رقم الشهادة / Serial No.:</span>
+                            <span class="value">${cert.serialNo}</span>
+                        </div>
+                        <div class="number-box">
+                            <span class="label">كود التحقق / Verification Code:</span>
+                            <span class="value">${cert.verifyCode}</span>
+                        </div>
+                    </div>
+
+                    <div class="cert-body">
+                        <div class="cert-section">
+                            <h4>1. وصف الشحنة / Description of Consignment</h4>
+                            <div class="info-grid">
+                                <div class="info-row">
+                                    <span class="label">إلى منظمة حماية النبات في:</span>
+                                    <span class="value">${cert.country}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">من منظمة حماية النبات في:</span>
+                                    <span class="value">سلطنة عمان - محافظة البريمي</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">اسم وعنوان المستورد:</span>
+                                    <span class="value">${cert.importerName} - ${cert.importerAddress}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">اسم وعنوان المصدر:</span>
+                                    <span class="value">${cert.exporterName} - ${cert.exporterAddress}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">نقطة الدخول المعلنة:</span>
+                                    <span class="value">${cert.entryPoint}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">بلد المنشأ:</span>
+                                    <span class="value">${cert.originCountry}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">الغرض / الاستخدام النهائي:</span>
+                                    <span class="value">${cert.purpose}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">وسيلة النقل المعلنة:</span>
+                                    <span class="value">${cert.conveyance}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cert-section">
+                            <h4>2. وصف المنتجات / Commodity Details</h4>
+                            <table class="products-table">
+                                <thead>
+                                    <tr>
+                                        <th>م</th>
+                                        <th>اسم السلعة</th>
+                                        <th>الفئة</th>
+                                        <th>الكمية</th>
+                                        <th>عدد الطرود</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${cert.products.map((p, i) => `
+                                        <tr>
+                                            <td>${i + 1}</td>
+                                            <td>${p.name}</td>
+                                            <td>${p.class}</td>
+                                            <td>${p.quantity}</td>
+                                            <td>${p.packages}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                            <div class="totals">
+                                <span>إجمالي الطرود: <strong>${totalPackages}</strong></span>
+                                <span>عدد المنتجات: <strong>${cert.products.length}</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="cert-section">
+                            <h4>3. التصريح الرسمي / Official Statement</h4>
+                            <p class="cert-statement">
+                                تشهد وزارة الثروة الزراعية والسمكية وموارد المياه بأن النباتات والمنتجات النباتية أو المواد المنظمة الأخرى الموضحة أعلاه قد تم فحصها و/أو اختبارها وفقاً للإجراءات الرسمية المناسبة وتعتبر خالية من الآفات الحجرية الزراعية المحددة من قبل طرف العقد المستورد ومطابقة لمتطلبات الصحة النباتية الحالية.
+                            </p>
+                            <p class="cert-statement-en">
+                                This is to certify that the plants, plant products or other regulated articles described herein have been inspected and/or tested according to appropriate official procedures and are considered to be free from the quarantine pests specified by the importing contracting party and to conform with the current phytosanitary requirements.
+                            </p>
+                        </div>
+
+                        ${cert.additionalDecl ? `
+                            <div class="cert-section">
+                                <h4>4. إقرار إضافي / Additional Declaration</h4>
+                                <p>${cert.additionalDecl}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="cert-footer">
+                        <div class="qr-section">
+                            <div id="qrcode"></div>
+                            <p>امسح للتحقق</p>
+                        </div>
+                        <div class="signature-section">
+                            <div class="signature-line">
+                                <span>التوقيع:</span>
+                                <div class="signature-box"></div>
+                            </div>
+                            <div class="date-line">
+                                <span>التاريخ:</span>
+                                <span>${new Date(cert.createdAt).toLocaleDateString('ar-SA')}</span>
+                            </div>
+                            <div class="stamp-area">
+                                <div class="official-stamp">ختم رسمي</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-watermark">
+                        وزارة الثروة الزراعية والسمكية وموارد المياه - سلطنة عمان
+                    </div>
+                </div>
+            `;
+            
+            // إنشاء QR Code
+            setTimeout(() => {
+                new QRCode(document.getElementById('qrcode'), {
+                    text: JSON.stringify({
+                        serial: cert.serialNo,
+                        code: cert.verifyCode,
+                        url: window.location.href
+                    }),
+                    width: 100,
+                    height: 100,
+                    colorDark: '#1b5e20',
+                    colorLight: '#ffffff'
+                });
+            }, 100);
+        }
+        
+        // طباعة الشهادة
+        function printCertificate() {
+            window.print();
+        }
+        
+        // تصدير PDF
+        function exportPDF() {
+            const element = document.getElementById('certTemplate');
+            const certId = getCertId();
+            
+            const opt = {
+                margin: 10,
+                filename: `شهادة_${certId}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+        }
+        
+        // تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', displayCertificate);
+    </script>
+</body>
+</html>'''
+
+with open(f"{base_dir}/view.html", "w", encoding="utf-8") as f:
+    f.write(view_html)
+
+print("✅ تم إنشاء view.html")

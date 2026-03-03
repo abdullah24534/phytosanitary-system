@@ -1,0 +1,170 @@
+base_dir = "/mnt/kimi/output/phytosanitary-system"
+
+# 5. reports.html - صفحة التقارير
+reports_html = '''<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التقارير والإحصائيات</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://kimi-web-img.moonshot.cn/img/www.mol.om/0156f953351832c8840e4ab16f306f311cf29e02.aspx" alt="Logo" class="sidebar-logo">
+                <h3>وزارة الثروة الزراعية</h3>
+                <p>محافظة البريمي</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span>الرئيسية</span>
+                </a>
+                <a href="certificate.html" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span>إنشاء شهادة</span>
+                </a>
+                <a href="certificates-list.html" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span>قائمة الشهادات</span>
+                </a>
+                <a href="reports.html" class="nav-item active">
+                    <span class="nav-icon">📈</span>
+                    <span>التقارير</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span>تسجيل الخروج</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-right">
+                    <h1>التقارير والإحصائيات</h1>
+                </div>
+                <div class="header-left">
+                    <button class="btn-secondary" onclick="exportReport()">📥 تصدير التقرير</button>
+                </div>
+            </header>
+
+            <div class="reports-content">
+                <!-- Report Filters -->
+                <div class="report-filters">
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <label>نوع التقرير</label>
+                            <select id="reportType" onchange="changeReportType()">
+                                <option value="daily">تقرير يومي</option>
+                                <option value="monthly">تقرير شهري</option>
+                                <option value="yearly">تقرير سنوي</option>
+                                <option value="custom">فترة مخصصة</option>
+                            </select>
+                        </div>
+                        <div class="filter-item" id="dayFilter">
+                            <label>التاريخ</label>
+                            <input type="date" id="reportDate">
+                        </div>
+                        <div class="filter-item" id="monthFilter" style="display:none;">
+                            <label>الشهر</label>
+                            <input type="month" id="reportMonth">
+                        </div>
+                        <div class="filter-item" id="yearFilter" style="display:none;">
+                            <label>السنة</label>
+                            <select id="reportYear">
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                            </select>
+                        </div>
+                        <div class="filter-item date-range" id="customFilter" style="display:none;">
+                            <label>من</label>
+                            <input type="date" id="dateFrom">
+                            <label>إلى</label>
+                            <input type="date" id="dateTo">
+                        </div>
+                        <button onclick="generateReport()">إنشاء التقرير</button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <h4>إجمالي الشهادات</h4>
+                        <p class="summary-number" id="totalCount">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>إجمالي المنتجات</h4>
+                        <p class="summary-number" id="totalProducts">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>إجمالي الطرود</h4>
+                        <p class="summary-number" id="totalPackages">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>عدد الدول</h4>
+                        <p class="summary-number" id="countriesCount">0</p>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-container">
+                    <div class="chart-box">
+                        <h3>الشهادات حسب اليوم</h3>
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>الشهادات حسب الدولة</h3>
+                        <canvas id="countriesChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>أكثر المنتجات تصديراً</h3>
+                        <canvas id="productsChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>الشهادات حسب الغرض</h3>
+                        <canvas id="purposeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detailed Table -->
+                <div class="report-table-section">
+                    <h3>تفاصيل الشهادات</h3>
+                    <div class="table-container">
+                        <table id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th>رقم الشهادة</th>
+                                    <th>التاريخ</th>
+                                    <th>المصدر</th>
+                                    <th>المستورد</th>
+                                    <th>الدولة</th>
+                                    <th>عدد المنتجات</th>
+                                    <th>الطرود</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/reports.js"></script>
+</body>
+</html>'''
+
+with open(f"{base_dir}/reports.html", "w", encoding="utf-8") as f:
+    f.write(reports_html)
+
+print("✅ تم إنشاء reports.html")

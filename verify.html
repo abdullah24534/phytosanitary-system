@@ -1,0 +1,254 @@
+base_dir = "/mnt/kimi/output/phytosanitary-system"
+
+# 13. verify.html - صفحة التحقق العامة (للمستخدمين الخارجيين)
+verify_html = '''<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التحقق من صحة الشهادة - وزارة الثروة الزراعية</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .verify-page {
+            background: linear-gradient(135deg, #1b5e20 0%, #4caf50 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .verify-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .verify-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: white;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .verify-title {
+            color: #1b5e20;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .verify-subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .verify-form {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .verify-form input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        .verify-form input:focus {
+            outline: none;
+            border-color: #1b5e20;
+        }
+        .verify-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #1b5e20, #4caf50);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .verify-btn:hover {
+            transform: translateY(-2px);
+        }
+        .verify-result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        .verify-result.success {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            display: block;
+        }
+        .verify-result.error {
+            background: #ffebee;
+            border: 2px solid #f44336;
+            display: block;
+        }
+        .verify-result h3 {
+            margin-bottom: 15px;
+        }
+        .result-details {
+            text-align: right;
+            margin-top: 15px;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .result-row:last-child {
+            border-bottom: none;
+        }
+        .official-badge {
+            display: inline-block;
+            background: #1b5e20;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        .security-note {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #999;
+            font-size: 0.85rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #1b5e20;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="verify-page">
+    <div class="verify-container">
+        <img src="https://kimi-web-img.moonshot.cn/img/www.mol.om/0156f953351832c8840e4ab16f306f311cf29e02.aspx" alt="Logo" class="verify-logo">
+        
+        <h1 class="verify-title">نظام التحقق من الشهادات</h1>
+        <p class="verify-subtitle">وزارة الثروة الزراعية والسمكية وموارد المياه - سلطنة عمان</p>
+        
+        <div class="verify-form">
+            <input type="text" id="serialInput" placeholder="رقم الشهادة (Serial No.)" maxlength="20">
+            <input type="text" id="codeInput" placeholder="كود التحقق (Verification Code)" maxlength="6">
+            <button class="verify-btn" onclick="verifyCertificate()">التحقق من صحة الشهادة</button>
+        </div>
+        
+        <div id="verifyResult" class="verify-result">
+            <!-- سيتم ملؤها بالنتيجة -->
+        </div>
+        
+        <div class="security-note">
+            <p>🔒 هذا النظام آمن ومعتمد من وزارة الثروة الزراعية والسمكية وموارد المياه</p>
+            <p>للاستفسارات: 80000000 | support@moa.gov.om</p>
+        </div>
+        
+        <a href="index.html" class="back-link">← الدخول لنظام الإدارة</a>
+    </div>
+
+    <script>
+        const CERTS_KEY = 'phytosanitary_certificates';
+        
+        function verifyCertificate() {
+            const serial = document.getElementById('serialInput').value.trim();
+            const code = document.getElementById('codeInput').value.trim();
+            const resultDiv = document.getElementById('verifyResult');
+            
+            if (!serial || !code) {
+                showResult('error', 'يرجى إدخال رقم الشهادة وكود التحقق');
+                return;
+            }
+            
+            // البحث في الشهادات
+            const certs = JSON.parse(localStorage.getItem(CERTS_KEY) || '[]');
+            const cert = certs.find(c => c.serialNo === serial && c.verifyCode === code);
+            
+            if (cert) {
+                const totalPackages = cert.products.reduce((sum, p) => sum + (parseInt(p.packages) || 0), 0);
+                showResult('success', `
+                    <h3>✅ الشهادة صحيحة ومعتمدة</h3>
+                    <span class="official-badge">شهادة رسمية معتمدة</span>
+                    <div class="result-details">
+                        <div class="result-row">
+                            <span>رقم الشهادة:</span>
+                            <strong>${cert.serialNo}</strong>
+                        </div>
+                        <div class="result-row">
+                            <span>تاريخ الإصدار:</span>
+                            <strong>${new Date(cert.createdAt).toLocaleDateString('ar-SA')}</strong>
+                        </div>
+                        <div class="result-row">
+                            <span>المصدر:</span>
+                            <strong>${cert.exporterName}</strong>
+                        </div>
+                        <div class="result-row">
+                            <span>المستورد:</span>
+                            <strong>${cert.importerName}</strong>
+                        </div>
+                        <div class="result-row">
+                            <span>الدولة المستوردة:</span>
+                            <strong>${cert.country}</strong>
+                        </div>
+                        <div class="result-row">
+                            <span>عدد المنتجات:</span>
+                            <strong>${cert.products.length}</strong>
+                        </div>
+                        <div class="result-row">
+                            <span>إجمالي الطرود:</span>
+                            <strong>${totalPackages}</strong>
+                        </div>
+                    </div>
+                `);
+            } else {
+                showResult('error', `
+                    <h3>❌ الشهادة غير صحيحة</h3>
+                    <p>لم يتم العثور على شهادة بهذه البيانات في نظامنا</p>
+                    <p>يرجى التأكد من:</p>
+                    <ul style="text-align:right; margin-top:10px;">
+                        <li>رقم الشهادة (Serial No.)</li>
+                        <li>كود التحقق (Verification Code)</li>
+                    </ul>
+                    <p style="margin-top:15px; font-size:0.9rem;">
+                        إذا كنت تعتقد أن هناك خطأ، يرجى التواصل مع الوزارة
+                    </p>
+                `);
+            }
+        }
+        
+        function showResult(type, html) {
+            const resultDiv = document.getElementById('verifyResult');
+            resultDiv.className = 'verify-result ' + type;
+            resultDiv.innerHTML = html;
+        }
+        
+        // السماح بالتحقق عند الضغط Enter
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('codeInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') verifyCertificate();
+            });
+        });
+    </script>
+</body>
+</html>'''
+
+with open(f"{base_dir}/verify.html", "w", encoding="utf-8") as f:
+    f.write(verify_html)
+
+print("✅ تم إنشاء verify.html")
