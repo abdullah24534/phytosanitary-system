@@ -1,142 +1,88 @@
 base_dir = "/mnt/kimi/output/phytosanitary-system"
 
-# إصلاح ملف auth.js - المشكلة في checkAuth()
-auth_js_fixed = '''// نظام المصادقة والتسجيل
-const AUTH_KEY = 'phytosanitary_auth';
-const USERS_KEY = 'phytosanitary_users';
-
-// المستخدم الافتراضي
-const DEFAULT_USER = {
-    username: 'admin',
-    password: 'admin123',
-    name: 'مدير النظام',
-    role: 'admin'
-};
-
-// تهيئة المستخدمين
-function initUsers() {
-    if (!localStorage.getItem(USERS_KEY)) {
-        localStorage.setItem(USERS_KEY, JSON.stringify([DEFAULT_USER]));
+# إنشاء auth.js كامل ونظيف
+auth_clean = '''// نظام المصادقة
+(function() {
+    // تهيئة المستخدم الافتراضي
+    if (!localStorage.getItem('phytosanitary_users')) {
+        localStorage.setItem('phytosanitary_users', JSON.stringify([{
+            username: 'admin',
+            password: 'admin123',
+            name: 'مدير النظام',
+            role: 'admin'
+        }]));
     }
-}
 
-// تسجيل الدخول
-function login(username, password) {
-    initUsers();
-    const users = JSON.parse(localStorage.getItem(USERS_KEY));
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-        const session = {
-            username: user.username,
-            name: user.name,
-            role: user.role,
-            loginTime: new Date().toISOString()
-        };
-        localStorage.setItem(AUTH_KEY, JSON.stringify(session));
-        return { success: true, user: session };
-    }
-    return { success: false, message: 'اسم المستخدم أو كلمة المرور غير صحيحة' };
-}
-
-// التحقق من تسجيل الدخول - إصلاح المشكلة هنا
-function checkAuth() {
-    const auth = localStorage.getItem(AUTH_KEY);
-    
-    // إذا كنا في صفحة تسجيل الدخول، لا نفعل شيئاً
-    if (window.location.pathname.includes('index.html') || 
-        window.location.pathname === '/' ||
-        window.location.pathname.endsWith('/')) {
-        return false;
-    }
-    
-    // إذا لم يكن هناك تسجيل دخول، نحول للصفحة الرئيسية
-    if (!auth) {
-        window.location.href = 'index.html';
-        return false;
-    }
-    
-    return JSON.parse(auth);
-}
-
-// تسجيل الخروج
-function logout() {
-    localStorage.removeItem(AUTH_KEY);
-    window.location.href = 'index.html';
-}
-
-// عرض اسم المستخدم
-function displayUser() {
-    const auth = localStorage.getItem(AUTH_KEY);
-    if (auth) {
-        const user = JSON.parse(auth);
-        const usernameEl = document.getElementById('usernameDisplay');
-        if (usernameEl) {
-            usernameEl.textContent = user.name;
-        }
-    }
-}
-
-// تبديل إظهار كلمة المرور
-function togglePassword() {
-    const passwordInput = document.getElementById('password');
-    const icon = document.querySelector('.toggle-password');
-    
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        icon.textContent = '🙈';
-    } else {
-        passwordInput.type = 'password';
-        icon.textContent = '👁️';
-    }
-}
-
-// معالجة نموذج تسجيل الدخول
-document.addEventListener('DOMContentLoaded', function() {
-    const loginForm = document.getElementById('loginForm');
-    
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorEl = document.getElementById('errorMessage');
-            
-            const result = login(username, password);
-            
-            if (result.success) {
-                errorEl.textContent = 'جاري تسجيل الدخول...';
-                errorEl.style.color = 'green';
-                
-                // الانتقال للوحة التحكم بعد نجاح الدخول
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 500);
-            } else {
-                errorEl.textContent = result.message;
-                errorEl.style.color = '#f44336';
-            }
-        });
-    }
-    
-    // التحقق من الصلاحيات في الصفحات المحمية
-    const protectedPages = ['dashboard.html', 'certificate.html', 'certificates-list.html', 'reports.html', 'view.html'];
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    if (protectedPages.includes(currentPage)) {
-        const auth = localStorage.getItem(AUTH_KEY);
-        if (!auth) {
-            window.location.href = 'index.html';
+    // دالة تبديل كلمة المرور
+    window.togglePassword = function() {
+        var pass = document.getElementById('password');
+        if (pass.type === 'password') {
+            pass.type = 'text';
         } else {
-            displayUser();
+            pass.type = 'password';
         }
-    }
-    
-    // عرض التاريخ الحالي
-    const dateEl = document.getElementById('currentDate');
-    if (dateEl) {
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        dateEl.textContent = new Date().toLocaleDateString('ar-SA', options);
-    }
-});
+    };
+
+    // معالجة تسجيل الدخول
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('loginForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                var username = document.getElementById('username').value;
+                var password = document.getElementById('password').value;
+                var errorEl = document.getElementById('errorMessage');
+                
+                var users = JSON.parse(localStorage.getItem('phytosanitary_users'));
+                var user = users.find(function(u) {
+                    return u.username === username && u.password === password;
+                });
+                
+                if (user) {
+                    localStorage.setItem('phytosanitary_auth', JSON.stringify({
+                        username: user.username,
+                        name: user.name,
+                        role: user.role
+                    }));
+                    
+                    errorEl.textContent = 'تم تسجيل الدخول بنجاح!';
+                    errorEl.style.color = 'green';
+                    
+                    setTimeout(function() {
+                        window.location.href = 'dashboard.html';
+                    }, 500);
+                } else {
+                    errorEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+                    errorEl.style.color = 'red';
+                }
+            });
+        }
+        
+        // التحقق من الصلاحيات في الصفحات الأخرى
+        var protectedPages = ['dashboard.html', 'certificate.html', 'certificates-list.html', 'reports.html'];
+        var currentPage = window.location.pathname.split('/').pop();
+        
+        if (protectedPages.indexOf(currentPage) !== -1) {
+            if (!localStorage.getItem('phytosanitary_auth')) {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // عرض اسم المستخدم
+        var usernameDisplay = document.getElementById('usernameDisplay');
+        if (usernameDisplay) {
+            var auth = localStorage.getItem('phytosanitary_auth');
+            if (auth) {
+                var user = JSON.parse(auth);
+                usernameDisplay.textContent = user.name;
+            }
+        }
+    });
+})();'''
+
+with open(f"{base_dir}/js/auth.js", "w", encoding="utf-8") as f:
+    f.write(auth_clean)
+
+print("✅ تم إنشاء auth.js نظيف")
+print("🔄 جرب الآن فتح index.html")
